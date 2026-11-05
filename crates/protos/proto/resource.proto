@@ -2120,6 +2120,17 @@ message MCPBackend {
   // dead connection and is dropped by intermediaries such as load balancers
   // and API gateways.
   optional google.protobuf.Duration sse_keep_alive = 6;
+
+  // Overrides for the MCP serverInfo and gateway instructions reported to
+  // clients when multiplexing multiple targets. name and version must be set
+  // together.
+  message ServerOverrides {
+    optional string name = 1;
+    optional string version = 2;
+    optional string title = 3;
+    optional string instructions = 4;
+  }
+  optional ServerOverrides server = 7;
 }
 
 message MCPTarget {

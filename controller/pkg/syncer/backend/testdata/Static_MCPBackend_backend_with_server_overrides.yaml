@@ -1,0 +1,21 @@
+- key: test-ns/server-overrides-mcp-backend/static-target
+  name:
+    name: server-overrides-mcp-backend
+    namespace: test-ns
+  static:
+    host: mcp-server.example.com
+    port: 8080
+- key: test-ns/server-overrides-mcp-backend
+  mcp:
+    server:
+      instructions: Use these tools.
+      name: my-gateway
+      title: My Gateway
+      version: 1.2.3
+    targets:
+    - backend:
+        backend: test-ns/server-overrides-mcp-backend/static-target
+      name: static-target
+  name:
+    name: server-overrides-mcp-backend
+    namespace: test-ns

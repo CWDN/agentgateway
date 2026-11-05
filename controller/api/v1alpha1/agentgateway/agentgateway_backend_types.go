@@ -661,6 +661,36 @@ type MCPBackend struct {
 	// names must be unique across targets.
 	// +optional
 	PrefixMode PrefixMode `json:"prefixMode,omitempty"`
+
+	// Overrides for the MCP `serverInfo` and gateway instructions reported to
+	// clients on `initialize`/`server/discover` when multiplexing multiple
+	// targets. Unset fields fall back to the normal defaults.
+	// +optional
+	Server *McpServerOverrides `json:"server,omitempty"`
+}
+
+// Overrides for the MCP `serverInfo` (`name`/`version`/`title`) and the gateway
+// instructions preamble, applied only when multiplexing multiple targets.
+// +kubebuilder:validation:XValidation:rule="has(self.name) == has(self.version)",message="name and version must be set together"
+type McpServerOverrides struct {
+	// Overrides `serverInfo.name`. Must be set together with `version`.
+	// Defaults to `agentgateway` when unset.
+	// +optional
+	Name *ShortString `json:"name,omitempty"`
+
+	// Overrides `serverInfo.version`. Must be set together with `name`.
+	// Defaults to the build version when unset.
+	// +optional
+	Version *ShortString `json:"version,omitempty"`
+
+	// Overrides `serverInfo.title`. Unset by default.
+	// +optional
+	Title *ShortString `json:"title,omitempty"`
+
+	// Overrides the gateway preamble prepended to merged upstream instructions.
+	// Defaults to a generic gateway description when unset.
+	// +optional
+	Instructions *LongString `json:"instructions,omitempty"`
 }
 
 const (

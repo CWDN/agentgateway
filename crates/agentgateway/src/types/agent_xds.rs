@@ -2362,9 +2362,20 @@ pub(crate) fn backend_with_policies_from_proto(
 				session_idle_ttl: crate::mcp::DEFAULT_SESSION_IDLE_TTL,
 				sse_keep_alive: m.sse_keep_alive.map(convert_duration),
 				dns_rebinding_protection: false,
-				// Not yet exposed over xDS; only the local/static config surface
-				// (`LocalMcpBackend`) supports these overrides today.
-				server: None,
+				server: m
+					.server
+					.as_ref()
+					.map(|s| {
+						let o = McpServerOverrides {
+							name: s.name.as_ref().map(strng::new),
+							version: s.version.as_ref().map(strng::new),
+							title: s.title.as_ref().map(strng::new),
+							instructions: s.instructions.as_ref().map(strng::new),
+						};
+						o.validate().map_err(ProtoError::Generic)?;
+						Ok::<_, ProtoError>(o)
+					})
+					.transpose()?,
 			},
 		),
 		Some(backend::Kind::Guardrail(_)) => {
@@ -6304,9 +6315,48 @@ mod tests {
 				prefix_mode: proto::agent::mcp_backend::PrefixMode::Conditional as i32,
 				failure_mode: proto::agent::mcp_backend::FailureMode::FailClosed as i32,
 				sse_keep_alive,
+				server: None,
 			})),
 			inline_policies: vec![],
 		}
+	}
+
+	fn mcp_proto_backend_with_server(
+		name: Option<&str>,
+		version: Option<&str>,
+	) -> proto::agent::Backend {
+		let mut b = mcp_proto_backend(None);
+		let Some(proto::agent::backend::Kind::Mcp(m)) = &mut b.kind else {
+			unreachable!()
+		};
+		m.server = Some(proto::agent::mcp_backend::ServerOverrides {
+			name: name.map(Into::into),
+			version: version.map(Into::into),
+			title: Some("t".into()),
+			instructions: Some("i".into()),
+		});
+		b
+	}
+
+	#[test]
+	fn test_backend_kind_mcp_server_overrides_from_xds() -> Result<(), ProtoError> {
+		let pb = mcp_proto_backend_with_server(Some("n"), Some("1.0"));
+		let bw = backend_with_policies_from_proto(&pb, &mut Diagnostics::default())?;
+		let Backend::MCP(_, mcp_backend) = &bw.backend else {
+			panic!("Expected Backend::MCP, got {:?}", bw.backend);
+		};
+		let s = mcp_backend.server.as_ref().expect("server overrides");
+		assert_eq!(s.name.as_deref(), Some("n"));
+		assert_eq!(s.version.as_deref(), Some("1.0"));
+		assert_eq!(s.title.as_deref(), Some("t"));
+		assert_eq!(s.instructions.as_deref(), Some("i"));
+		Ok(())
+	}
+
+	#[test]
+	fn test_backend_kind_mcp_server_overrides_name_without_version_rejected() {
+		let pb = mcp_proto_backend_with_server(Some("n"), None);
+		assert!(backend_with_policies_from_proto(&pb, &mut Diagnostics::default()).is_err());
 	}
 
 	#[test]

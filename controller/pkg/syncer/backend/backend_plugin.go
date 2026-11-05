@@ -410,6 +410,15 @@ func TranslateMCPBackends(ctx plugins.PolicyCtx, be *agentgateway.AgentgatewayBa
 	case agentgateway.PrefixNever:
 		prefixMode = api.MCPBackend_NEVER
 	}
+	var server *api.MCPBackend_ServerOverrides
+	if s := mcp.Server; s != nil {
+		server = &api.MCPBackend_ServerOverrides{
+			Name:         s.Name,
+			Version:      s.Version,
+			Title:        s.Title,
+			Instructions: s.Instructions,
+		}
+	}
 	mcpBackend := &api.Backend{
 		Key:  be.Namespace + "/" + be.Name,
 		Name: plugins.ResourceName(be),
@@ -419,6 +428,7 @@ func TranslateMCPBackends(ctx plugins.PolicyCtx, be *agentgateway.AgentgatewayBa
 				StatefulMode: sessionRouting,
 				FailureMode:  failureMode,
 				PrefixMode:   prefixMode,
+				Server:       server,
 			},
 		},
 		InlinePolicies: inlinePolicies,

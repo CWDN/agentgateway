@@ -100,6 +100,32 @@ func TestBuildMCP(t *testing.T) {
 			},
 		},
 		{
+			name: "Static MCPBackend backend with server overrides",
+			backend: &agentgateway.AgentgatewayBackend{
+				Name:      "server-overrides-mcp-backend",
+				Namespace: "test-ns",
+				Spec: agentgateway.AgentgatewayBackendSpec{
+					MCP: &agentgateway.MCPBackend{
+						Server: &agentgateway.McpServerOverrides{
+							Name:         new("my-gateway"),
+							Version:      new("1.2.3"),
+							Title:        new("My Gateway"),
+							Instructions: new("Use these tools."),
+						},
+						Targets: []agentgateway.McpTargetSelector{
+							{
+								Name: "static-target",
+								Static: &agentgateway.McpTarget{
+									Host: shortStringPtr("mcp-server.example.com"),
+									Port: 8080,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
 			name: "Service selector MCPBackend backend - same namespace",
 			backend: &agentgateway.AgentgatewayBackend{
 				Name:      "service-mcp-backend",

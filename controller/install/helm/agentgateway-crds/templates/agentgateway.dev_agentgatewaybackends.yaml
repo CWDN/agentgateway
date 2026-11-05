@@ -7843,6 +7843,42 @@ spec:
                     - Conditional
                     - Never
                     type: string
+                  server:
+                    description: |-
+                      Overrides for the MCP `serverInfo` and gateway instructions reported to
+                      clients on `initialize`/`server/discover` when multiplexing multiple
+                      targets. Unset fields fall back to the normal defaults.
+                    properties:
+                      instructions:
+                        description: |-
+                          Overrides the gateway preamble prepended to merged upstream instructions.
+                          Defaults to a generic gateway description when unset.
+                        maxLength: 1024
+                        minLength: 1
+                        type: string
+                      name:
+                        description: |-
+                          Overrides `serverInfo.name`. Must be set together with `version`.
+                          Defaults to `agentgateway` when unset.
+                        maxLength: 256
+                        minLength: 1
+                        type: string
+                      title:
+                        description: Overrides `serverInfo.title`. Unset by default.
+                        maxLength: 256
+                        minLength: 1
+                        type: string
+                      version:
+                        description: |-
+                          Overrides `serverInfo.version`. Must be set together with `name`.
+                          Defaults to the build version when unset.
+                        maxLength: 256
+                        minLength: 1
+                        type: string
+                    type: object
+                    x-kubernetes-validations:
+                    - message: name and version must be set together
+                      rule: has(self.name) == has(self.version)
                   sessionRouting:
                     description: |-
                       MCP session routing behavior.
